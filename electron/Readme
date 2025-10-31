@@ -1,0 +1,23 @@
+Buil Web trước
+
+cd frontend
+npm run build
+
+Build file .exe
+
+Chạy:
+cd electron
+npm run build:exe
+
+
+
+
+Install Service
+pip install --upgrade pip
+pip install flask flask-cors flask-sock pyserial pywin32
+
+cmd vào thư mục backend chạy:
+
+python esp32_service.py install --startup auto
+python esp32_service.py start
+

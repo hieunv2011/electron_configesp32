@@ -1,0 +1,40 @@
+{
+  "name": "esp32-manager",
+  "version": "1.0.0",
+  "description": "ESP32 configuration and monitoring tool (Electron + React)",
+  "main": "main.js",
+  "author": "You",
+  "license": "MIT",
+
+  "scripts": {
+    "start": "electron .",
+    "build:exe": "electron-builder"
+  },
+
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^25.0.0"
+  },
+
+  "build": {
+    "appId": "com.yourdomain.esp32manager",
+    "productName": "ESP32 Manager",
+    "files": [
+      "main.js",
+      "preload.js",
+      "frontend/dist/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
