@@ -7,10 +7,8 @@
   "scripts": {
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev": "concurrently \"vite\" \"electron .\"",
-    "build": "vite build",
-    "builde": "electron-builder",
-    "start": "electron ."
+    "dev": "concurrently \"vite\"",
+    "build": "vite build"
   },
   "dependencies": {
     "@ant-design/icons": "^5.6.1",

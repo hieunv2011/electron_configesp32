@@ -33,7 +33,11 @@ const Esp32Log = ({ isPortOpen }) => {
   }, [isPortOpen]);
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Chỉ cuộn container, không cuộn trang
+    const container = logEndRef.current?.parentElement?.parentElement;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [logs]);
 
   return (
