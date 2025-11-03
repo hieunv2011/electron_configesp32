@@ -8,6 +8,13 @@ import {
   sendWifiTh,
   sendReboot,
   sendReset,
+  sendWifiDt,
+  sendServerTh,
+  sendServerDt,
+  sendCapture,
+  sendOTA,
+  sendFram,
+  sendSocketTh
 } from "../utils/api";
 import { message } from "antd";
 import {
@@ -41,8 +48,21 @@ const { Option } = Select;
 
 export default function WifiConfigForm() {
   const [serial, setSerial] = useState(123);
+
   const [ssidTh, setSsidTh] = useState("");
+  const [ssidDt, setSsidDt] = useState("");
+
   const [passwordTh, setPasswordTh] = useState("");
+  const [passwordDt, setPasswordDt] = useState("");
+
+  const [serverTh, setServerTh] = useState("");
+  const [serverDt, setServerDt] = useState("");
+
+  const [tbServerTh, setTbServerTh] = useState("");
+  const [tbServerDt, setTbServerDt] = useState("");
+
+  const [serverWsTh, setServerWsTh] = useState("");
+  const [portWsTh, setPortWsTh] = useState("");
 
   const [userCommand, setUserCommand] = useState("");
   const [ports, setPorts] = useState([]);
@@ -126,10 +146,100 @@ export default function WifiConfigForm() {
     }
   };
 
+  const handleCapture = async () => {
+    try {
+      await sendCapture(serial);
+      messageApi.success("Đã gửi lệnh chụp ảnh");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi lệnh chụp ảnh thất bại");
+    }
+  };
+
+  const handleSendOta = async () => {
+    try {
+      await sendOTA(serial);
+      messageApi.success("Đã gửi lệnh OTA Update");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi lệnh OTA Update thất bại");
+    }
+  };
+
+  const handleSendFram = async () => {
+    try {
+      await sendFram(serial);
+      messageApi.success("Đã gửi lệnh FRAM");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi lệnh FRAM thất bại");
+    }
+  };
+
   const handleSendWifiTh = async () => {
     try {
       await sendWifiTh(serial, ssidTh, passwordTh);
       messageApi.success("Đã gửi lệnh WiFi Trong hình thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi thất bại");
+    }
+  };
+
+  const handleSendWifiDt = async () => {
+    try {
+      await sendWifiDt(serial, ssidDt, passwordDt);
+      messageApi.success("Đã gửi lệnh WiFi Đường trường thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi thất bại");
+    }
+  };
+
+  const handleSendTbServerTh = async () => {
+    try {
+      await sendServerTh(serial, tbServerTh);
+      messageApi.success("Đã gửi lệnh Thingsboard Trong hình thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi thất bại");
+    }
+  };
+
+  const handleSendTbServerDt = async () => {
+    try {
+      await sendServerDt(serial, tbServerDt);
+      messageApi.success("Đã gửi lệnh Thingsboard Đường trường thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi thất bại");
+    }
+  };
+
+  const handleSendServerTh = async () => {
+    try {
+      await sendServerTh(serial, serverTh);
+      messageApi.success("Đã gửi lệnh Server Trong hình thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi thất bại");
+    }
+  };
+
+  const handleSendServerDt = async () => {
+    try {
+      await sendServerDt(serial, serverDt);
+      messageApi.success("Đã gửi lệnh Server Đường trường thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi thất bại");
+    }
+  };
+
+  const handleSendSocketTh = async () => {
+    try {
+      await sendSocketTh(serial, serverWsTh, portWsTh);
+      messageApi.success("Đã gửi lệnh Socket Trong hình thành công");
     } catch (err) {
       console.error(err);
       messageApi.error("Gửi thất bại");
@@ -207,12 +317,23 @@ export default function WifiConfigForm() {
             </Button>
             <Flex gap={8}>
               <Tooltip title="OTA Update">
-                <Button type="primary" icon={<DownloadOutlined />} disabled />
+                <Button
+                  type="primary"
+                  icon={<DownloadOutlined />}
+                  disabled
+                  onClick={handleSendOta}
+                />
               </Tooltip>
               <Tooltip title="Chụp ảnh">
-                <Button type="primary" icon={<CameraOutlined />} />
+                <Button
+                  type="primary"
+                  icon={<CameraOutlined />}
+                  onClick={handleCapture}
+                />
               </Tooltip>
-              <Button type="primary">FRAM</Button>
+              <Button type="primary" onClick={handleSendFram}>
+                FRAM
+              </Button>
               <Button
                 type="primary"
                 style={{
@@ -254,6 +375,7 @@ export default function WifiConfigForm() {
                   size="middle"
                   onClick={handleSendWifiTh}
                   style={{ minWidth: 30 }}
+                  disabled={!ssidTh || !passwordTh}
                 />
               </Tooltip>
             </Flex>
@@ -261,7 +383,9 @@ export default function WifiConfigForm() {
             {/* Server TH */}
             <Flex gap={16}>
               <Input
-                placeholder="Nhập server trong hình"
+                placeholder="Nhập server máy chủ trong hình"
+                value={serverTh}
+                onChange={(e) => setServerTh(e.target.value)}
                 prefix={<CloudServerOutlined />}
               />
               <Tooltip title="Gửi Server TH" placement="left">
@@ -269,7 +393,9 @@ export default function WifiConfigForm() {
                   type="primary"
                   icon={<SendOutlined />}
                   size="middle"
+                  onClick={handleSendServerTh}
                   style={{ minWidth: 30 }}
+                  disabled={!serverTh}
                 />
               </Tooltip>
             </Flex>
@@ -278,14 +404,18 @@ export default function WifiConfigForm() {
             <Flex gap={16}>
               <Input
                 placeholder="Nhập server Thingsboard trong hình"
+                value={tbServerTh}
+                onChange={(e) => setTbServerTh(e.target.value)}
                 prefix={<DatabaseOutlined />}
               />
               <Tooltip title="Gửi Server Thingsboard TH" placement="left">
                 <Button
                   type="primary"
                   icon={<SendOutlined />}
+                  onClick={handleSendTbServerTh}
                   size="middle"
                   style={{ minWidth: 30 }}
+                  disabled={!tbServerTh}
                 />
               </Tooltip>
             </Flex>
@@ -294,10 +424,14 @@ export default function WifiConfigForm() {
             <Flex gap={16}>
               <Input
                 placeholder="Nhập server socket trong hình"
+                value={serverWsTh}
+                onChange={(e) => setServerWsTh(e.target.value)}
                 prefix={<ApiOutlined />}
               />
               <Input
                 placeholder="Nhập cổng server socket trong hình"
+                value={portWsTh}
+                onChange={(e) => setPortWsTh(e.target.value)}
                 prefix={<ApiOutlined />}
               />
               <Tooltip title="Gửi Server WS TH" placement="left">
@@ -305,6 +439,8 @@ export default function WifiConfigForm() {
                   type="primary"
                   icon={<SendOutlined />}
                   size="middle"
+                  onClick={handleSendSocketTh}
+                  disabled={!serverWsTh || !portWsTh}
                   style={{ minWidth: 30 }}
                 />
               </Tooltip>
@@ -321,10 +457,14 @@ export default function WifiConfigForm() {
             <Flex gap={16}>
               <Input
                 placeholder="Nhập wifi đường trường"
+                value={ssidDt}
+                onChange={(e) => setSsidDt(e.target.value)}
                 prefix={<WifiOutlined />}
               />
               <Input.Password
                 placeholder="Nhập mật khẩu wifi đường trường"
+                value={passwordDt}
+                onChange={(e) => setPasswordDt(e.target.value)}
                 prefix={<LockOutlined />}
               />
               <Tooltip title="Gửi Wifi ĐT" placement="left">
@@ -332,7 +472,9 @@ export default function WifiConfigForm() {
                   type="primary"
                   icon={<SendOutlined />}
                   size="middle"
+                  onClick={handleSendWifiDt}
                   style={{ minWidth: 30 }}
+                  disabled={!ssidDt || !passwordDt}
                 />
               </Tooltip>
             </Flex>
@@ -340,15 +482,19 @@ export default function WifiConfigForm() {
             {/* Server ĐT */}
             <Flex gap={16}>
               <Input
-                placeholder="Nhập server đường trường"
+                placeholder="Nhập server máy chủ đường trường"
+                value={serverDt}
+                onChange={(e) => setServerDt(e.target.value)}
                 prefix={<CloudServerOutlined />}
               />
               <Tooltip title="Gửi Server ĐT" placement="left">
                 <Button
                   type="primary"
                   icon={<SendOutlined />}
+                  onClick={handleSendServerDt}
                   size="middle"
                   style={{ minWidth: 30 }}
+                  disabled={!serverDt}
                 />
               </Tooltip>
             </Flex>
@@ -357,14 +503,18 @@ export default function WifiConfigForm() {
             <Flex gap={16}>
               <Input
                 placeholder="Nhập server Thingsboard đường trường"
+                value={tbServerDt}
+                onChange={(e) => setTbServerDt(e.target.value)}
                 prefix={<DatabaseOutlined />}
               />
               <Tooltip title="Gửi Server Thingsboard ĐT" placement="left">
                 <Button
                   type="primary"
                   icon={<SendOutlined />}
+                  onClick={handleSendTbServerDt}
                   size="middle"
                   style={{ minWidth: 30 }}
+                  disabled={!tbServerDt}
                 />
               </Tooltip>
             </Flex>
