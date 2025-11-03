@@ -13,6 +13,10 @@ sock = Sock(app)
 ser = None
 clients = set()
 
+@app.get("/api/hello")
+def hello():
+    return {"msg": "Hello from Python"}
+
 # ------------------- Serial -------------------
 @app.route("/list_ports", methods=["GET"])
 def list_ports():

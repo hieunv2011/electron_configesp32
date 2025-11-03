@@ -25,6 +25,12 @@
       "buildResources": "assets",
       "output": "release"
     },
+    "extraResources": [
+      {
+        "from": "../backend/dist/serial_service.exe",
+        "to": "backend/dist/serial_service.exe"
+      }
+    ],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
