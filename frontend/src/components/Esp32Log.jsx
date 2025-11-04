@@ -1,13 +1,32 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Button, Tooltip } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
+import { Button, Tag, message } from "antd";
+import { DeleteOutlined, CopyOutlined } from "@ant-design/icons";
 
 const Esp32Log = ({ isPortOpen }) => {
   const [logs, setLogs] = useState([]);
   const wsRef = useRef(null);
-  const logEndRef = useRef(null);
+  const logContainerRef = useRef(null);
+  const [deviceUUID, setDeviceUUID] = useState(null);
 
-  const handleClearLog = () => setLogs([]);
+  const handleClearLog = () => {
+    setLogs([]);
+    setDeviceUUID(null);
+  };
+
+  // ✅ hiển thị thông báo sau khi copy
+  const handleCopy = async () => {
+    if (deviceUUID) {
+      try {
+        await navigator.clipboard.writeText(deviceUUID);
+        message.success({
+          content: "✅ Đã sao chép Access Token vào bộ nhớ tạm",
+          duration: 2,
+        });
+      } catch (err) {
+        message.error("Không thể sao chép, vui lòng thử lại!");
+      }
+    }
+  };
 
   useEffect(() => {
     if (!isPortOpen) {
@@ -22,8 +41,15 @@ const Esp32Log = ({ isPortOpen }) => {
     wsRef.current = ws;
 
     ws.onopen = () => console.log("✅ WS connected");
-    ws.onmessage = (event) =>
-      setLogs((prev) => [...prev.slice(-200), event.data]);
+    ws.onmessage = (event) => {
+      const msg = event.data;
+      const match = msg.match(
+        /([0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4})/i
+      );
+      if (match) setDeviceUUID(match[1]);
+
+      setLogs((prev) => [...prev.slice(-200), msg]);
+    };
     ws.onclose = () => console.log("❌ WS disconnected");
 
     return () => {
@@ -33,15 +59,14 @@ const Esp32Log = ({ isPortOpen }) => {
   }, [isPortOpen]);
 
   useEffect(() => {
-    // Chỉ cuộn container, không cuộn trang
-    const container = logEndRef.current?.parentElement?.parentElement;
-    if (container) {
-      container.scrollTop = container.scrollHeight;
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
   }, [logs]);
 
   return (
     <div
+      ref={logContainerRef}
       style={{
         position: "relative",
         backgroundColor: "#000",
@@ -54,39 +79,55 @@ const Esp32Log = ({ isPortOpen }) => {
         opacity: isPortOpen ? 1 : 0.4,
       }}
     >
-      {/* Nút clear log (sticky góc phải) */}
       <div
         style={{
           position: "sticky",
           top: 0,
           display: "flex",
           justifyContent: "flex-end",
+          alignItems: "center",
+          gap: 8,
           background: "rgba(0, 0, 0, 0)",
           padding: "4px 0",
           zIndex: 2,
         }}
       >
-          <Button
-            icon={<DeleteOutlined />}
-            danger
-            size="small"
-            onClick={handleClearLog}
-            style={{ minWidth: 30 }}
-          >Clear log</Button>
+        {deviceUUID ? (
+          <>
+            <Tag color="green" style={{ fontSize: 13, padding: "3px 8px" }}>
+              📟 Access Token: <b>{deviceUUID}</b>
+            </Tag>
+            <Button
+              icon={<CopyOutlined />}
+              size="small"
+              onClick={handleCopy}
+              title="Copy Access Token"
+            />
+          </>
+        ) : (
+          <Tag color="default" style={{ fontSize: 13, padding: "3px 8px" }}>
+            Chưa nhận Access Token
+          </Tag>
+        )}
+        <Button
+          icon={<DeleteOutlined />}
+          danger
+          size="small"
+          onClick={handleClearLog}
+          style={{ minWidth: 30 }}
+        >
+          Clear log
+        </Button>
       </div>
 
-      {/* Nội dung log */}
       {logs.length === 0 && (
         <div style={{ color: "#888" }}>
-          {isPortOpen
-            ? "Đang chờ dữ liệu từ ESP32..."
-            : "Cổng serial chưa mở."}
+          {isPortOpen ? "Đang chờ dữ liệu từ ESP32..." : "Cổng serial chưa mở."}
         </div>
       )}
       {logs.map((line, index) => (
         <div key={index}>{line}</div>
       ))}
-      <div ref={logEndRef} />
     </div>
   );
 };

@@ -14,7 +14,10 @@ import {
   sendCapture,
   sendOTA,
   sendFram,
-  sendSocketTh
+  sendSocketTh,
+  sendDeviceSerial,
+  sendReadInfo,
+  sendDebugCpu,
 } from "../utils/api";
 import { message } from "antd";
 import {
@@ -26,6 +29,7 @@ import {
   Typography,
   Select,
   Flex,
+  AutoComplete,
 } from "antd";
 
 import {
@@ -38,16 +42,21 @@ import {
   DatabaseOutlined,
   ApiOutlined,
   UndoOutlined,
-  RedoOutlined,
+  InfoCircleOutlined,
+  CarOutlined,
 } from "@ant-design/icons";
 import { Tooltip } from "antd";
 import Esp32Log from "./Esp32Log";
+import commandList from "../const/commandList";
 
 const { Text } = Typography;
 const { Option } = Select;
 
 export default function WifiConfigForm() {
   const [serial, setSerial] = useState(123);
+  const [deviceSerial, setDeviceSerial] = useState("DTA12345678");
+
+  const [carNumber, setCarNumber] = useState("");
 
   const [ssidTh, setSsidTh] = useState("");
   const [ssidDt, setSsidDt] = useState("");
@@ -63,6 +72,9 @@ export default function WifiConfigForm() {
 
   const [serverWsTh, setServerWsTh] = useState("");
   const [portWsTh, setPortWsTh] = useState("");
+
+  const [cpu, setCpu] = useState("0");
+  const [debug, setDebug] = useState("0");
 
   const [userCommand, setUserCommand] = useState("");
   const [ports, setPorts] = useState([]);
@@ -106,7 +118,7 @@ export default function WifiConfigForm() {
     }
 
     try {
-      const res = await openPort(selectedPort); // gọi API
+      const res = await openPort(selectedPort);
       messageApi.success(`Đã mở ${res.port}`);
       console.log("✅ Opened:", res);
       setIsPortOpen(true);
@@ -143,6 +155,16 @@ export default function WifiConfigForm() {
     } catch (err) {
       console.error(err);
       messageApi.error("Gửi lệnh reset thất bại");
+    }
+  };
+
+  const handleReadInfo = async () => {
+    try {
+      await sendReadInfo(serial);
+      messageApi.success("Đã gửi lệnh đọc thông tin thiết bị");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi lệnh info thất bại");
     }
   };
 
@@ -246,75 +268,162 @@ export default function WifiConfigForm() {
     }
   };
 
+  const handleSendCpuDebug = async () => {
+    try {
+      await sendDebugCpu(serial, cpu, debug);
+      messageApi.success("Đã gửi lệnh CPU và Debug thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi lệnh CPU và Debug thất bại");
+    }
+  };
+
+  const handleSendDeviceSerial = async () => {
+    const pattern = /^DTA\d{8}$/;
+
+    if (!pattern.test(deviceSerial)) {
+      messageApi.error(
+        "Mã thiết bị phải bắt đầu bằng DTA và có 8 số đằng sau!"
+      );
+      return;
+    }
+
+    try {
+      await sendDeviceSerial(deviceSerial);
+      messageApi.success("Đã gửi lệnh Device Serial thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi lệnh Serial thất bại");
+    }
+  };
+
+  const handleSendCar = async () => {
+    try {
+      await sendCar(serial, carNumber);
+      messageApi.success("Đã gửi lệnh Car thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi lệnh Car thất bại");
+    }
+  };
+
   return (
-    <Form layout="vertical" style={{ padding: 16 }}>
+    <Form layout="vertical" style={{}}>
       {contextHolder}
       {/* COM control */}
       <Form.Item>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text strong>ESP32 Serial</Text>
-          <Space>
-            <Select
-              placeholder="Chọn cổng COM"
-              style={{ width: 250 }}
-              loading={loadingPorts}
-              onChange={setSelectedPort}
-              value={selectedPort}
-              disabled={isPortOpen}
-            >
-              {ports.map((p) => (
-                <Option key={p.device} value={p.device}>
-                  {p.device} - {p.manufacturer || p.description || "Unknown"}
-                </Option>
-              ))}
-            </Select>
-            <Button
-              onClick={fetchPorts}
-              disabled={isPortOpen}
-              icon={<UndoOutlined />}
-            />
-            <Button
-              type="primary"
-              onClick={handleOpenPort}
-              disabled={isPortOpen}
-            >
-              Mở cổng
-            </Button>
-            <Button danger onClick={handleClosePort} disabled={!isPortOpen}>
-              Đóng cổng
-            </Button>
-          </Space>
-        </div>
+        <Flex gap={16}>
+          <AutoComplete
+            value={userCommand}
+            options={commandList.map((cmd) => ({
+              value: cmd.value,
+              label: cmd.label,
+            }))}
+            placeholder="USER COMMAND"
+            filterOption={(inputValue, option) =>
+              option?.value.toLowerCase().includes(inputValue.toLowerCase())
+            }
+            onChange={setUserCommand}
+            onSelect={setUserCommand}
+          >
+            <Input />
+          </AutoComplete>
+          <Button
+            type="primary"
+            icon={<SendOutlined />}
+            size="middle"
+            onClick={handleSendUserCommand}
+          >
+            Gửi
+          </Button>
+          <Select
+            placeholder="Chọn cổng COM"
+            style={{ width: 250 }}
+            loading={loadingPorts}
+            onChange={setSelectedPort}
+            value={selectedPort}
+            disabled={isPortOpen}
+          >
+            {ports.map((p) => (
+              <Option key={p.device} value={p.device}>
+                {p.device} - {p.manufacturer || p.description || "Unknown"}
+              </Option>
+            ))}
+          </Select>
+          <Button
+            onClick={fetchPorts}
+            disabled={isPortOpen}
+            icon={<UndoOutlined />}
+            shape="circle"
+          />
+          <Button type="primary" onClick={handleOpenPort} disabled={isPortOpen}>
+            Mở cổng
+          </Button>
+          <Button danger onClick={handleClosePort} disabled={!isPortOpen}>
+            Đóng cổng
+          </Button>
+        </Flex>
       </Form.Item>
       {/* WiFi config */}
-      <Form.Item label="CONFIG">
+      <Form.Item>
         <Flex vertical gap={8}>
           <Flex gap={16}>
             <Input
-              placeholder="Serial"
-              value={serial}
-              onChange={(e) => setSerial(e.target.value)}
-            />
-            <Input placeholder="COMMAND" disabled />
-            <Input
-              placeholder="USER COMMAND"
-              value={userCommand}
-              onChange={(e) => setUserCommand(e.target.value)}
+              placeholder="Số xe"
+              value={carNumber}
+              onChange={(e) => setCarNumber(e.target.value)}
+              prefix={<CarOutlined />}
             />
             <Button
               type="primary"
               icon={<SendOutlined />}
               size="middle"
-              onClick={handleSendUserCommand}
+              onClick={handleSendCar}
             >
-              Gửi
+              Gửi số xe
             </Button>
+            <Select
+              placeholder="Chọn cặp CPU/Debug"
+              style={{ width: 800 }}
+              value={`${cpu} ${debug}`}
+              onChange={(value) => {
+                const [cpuVal, debugVal] = value.split(" ");
+                setCpu(cpuVal);
+                setDebug(debugVal);
+              }}
+              options={[
+                { label: "CPU 0 - Debug 0", value: "0 0" },
+                { label: "CPU 0 - Debug 1", value: "0 1" },
+                { label: "CPU 1 - Debug 1", value: "1 1" },
+                { label: "CPU 2 - Debug 1", value: "2 1" },
+              ]}
+            />
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              size="middle"
+              onClick={handleSendCpuDebug}
+            >
+              Gửi CPU/Debug
+            </Button>
+            <Input
+              placeholder="Device Serial"
+              value={deviceSerial}
+              onChange={(e) => setDeviceSerial(e.target.value)}
+            />
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              size="middle"
+              onClick={handleSendDeviceSerial}
+            >
+              Gửi Serial
+            </Button>
+            {/* <Input
+              placeholder="USER COMMAND"
+              value={userCommand}
+              onChange={(e) => setUserCommand(e.target.value)}
+            /> */}
             <Flex gap={8}>
               <Tooltip title="OTA Update">
                 <Button
@@ -337,6 +446,17 @@ export default function WifiConfigForm() {
               <Button
                 type="primary"
                 style={{
+                  backgroundColor: "#13c2c2",
+                  borderColor: "#13c2c2",
+                }}
+                icon={<InfoCircleOutlined />}
+                onClick={handleReadInfo}
+              >
+                INFO
+              </Button>
+              {/* <Button
+                type="primary"
+                style={{
                   backgroundColor: "#faad14",
                   borderColor: "#faad14",
                 }}
@@ -347,7 +467,7 @@ export default function WifiConfigForm() {
               </Button>
               <Button type="primary" danger onClick={handleReset}>
                 Reset ESP32
-              </Button>
+              </Button> */}
             </Flex>
           </Flex>
           {/* Trong hình */}
@@ -380,8 +500,8 @@ export default function WifiConfigForm() {
               </Tooltip>
             </Flex>
 
-            {/* Server TH */}
             <Flex gap={16}>
+              {/* Server TH */}
               <Input
                 placeholder="Nhập server máy chủ trong hình"
                 value={serverTh}
@@ -397,11 +517,8 @@ export default function WifiConfigForm() {
                   style={{ minWidth: 30 }}
                   disabled={!serverTh}
                 />
+                {/* Server Thingsboard TH */}
               </Tooltip>
-            </Flex>
-
-            {/* Server Thingsboard TH */}
-            <Flex gap={16}>
               <Input
                 placeholder="Nhập server Thingsboard trong hình"
                 value={tbServerTh}
@@ -521,6 +638,7 @@ export default function WifiConfigForm() {
           </Flex>
         </Flex>
       </Form.Item>
+
       <Divider />
 
       {/* LOG */}

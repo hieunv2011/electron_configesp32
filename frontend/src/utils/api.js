@@ -37,6 +37,14 @@ export const sendWifiDt = async (serial, ssid, password) => {
   return res;
 };
 
+//sendSerial
+export const sendDeviceSerial = async (deviceSerial)=> {
+  if (!deviceSerial) throw new Error("Thiếu Serial");
+  const raw = `@,SERIAL,911000,1,${deviceSerial}$`;
+  const res = await sendCommand(raw);
+  return res;
+}
+
 //sendServerTh
 export const sendServerTh = async (serial, server) => {
   if (!server) throw new Error("Thiếu server");
@@ -119,6 +127,32 @@ export const sendOTA = async (serial, ota_url) => {
   const res = await sendCommand(raw);
   return res;
 }
+//sendReadInfo
+export const sendReadInfo = async (serial) => {
+  if (!serial) throw new Error("Thiếu Serial");
+  const raw = `@,INFO,${serial}$`;
+  const res = await sendCommand(raw);
+  return res;
+}
+
+//sendCar
+export const sendCar = async (serial, car) => {
+  if (!carMode) throw new Error("Thiếu car");
+  const raw = `@,CONFIG,${serial || ""},car,${car}$`;
+  const res = await sendCommand(raw);
+  return res;
+};
+
+//send debug & cpu
+export const sendDebugCpu = async (serial, cpu, debug) => {
+  if (!cpu || !debug) throw new Error("Thiếu debug hoặc cpu");
+  const raw1 = `@,CONFIG,${debug || ""},ws_server,${debug}$`;
+  const raw2 = `@,CONFIG,${cpu || ""},ws_port,${cpu}$`;
+  const res1 = await sendCommand(raw1);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const res2 = await sendCommand(raw2);
+  return { first: res1, second: res2 };
+};
 
 export const closePort = async () => {
   const res = await api.post("/close");
