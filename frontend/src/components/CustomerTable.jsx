@@ -1,39 +1,35 @@
 import React, { useState, useEffect } from "react";
-import {
-  Table,
-  Select,
-  Pagination,
-  Row,
-  Col,
-
-} from "antd";
+import { Table, Select, Pagination, Row, Col, Button, Space, Tooltip } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
+import CustomerAddModal from "./CustomerAddModal";
+import CustomerServerConfig from "./CustomerServerConfig"; 
+import { PlusOutlined } from "@ant-design/icons";
 
-const CustomerTable = ({ initialPage = 0, initialPageSize = 10 }) => {
+const CustomerTable = ({ accessToken, initialPage = 0, initialPageSize = 10 }) => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [total, setTotal] = useState(0);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Modal server config
+  const [serverConfigModalOpen, setServerConfigModalOpen] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+
   const fetchCustomers = async (pageIndex = page, size = pageSize) => {
+    if (!accessToken) return;
     setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) throw new Error("Chưa đăng nhập");
-
       const res = await axios.get(
         `http://tb.giamsatdinhvi.com:8080/api/customers?pageSize=${size}&page=${pageIndex}&sortProperty=createdTime&sortOrder=DESC`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-
       setCustomers(res.data.data || []);
       setTotal(res.data.totalElements || 0);
     } catch (err) {
       console.error("❌ Lỗi lấy khách hàng:", err);
-      messageApi.error("Không thể tải danh sách khách hàng");
     } finally {
       setLoading(false);
     }
@@ -41,7 +37,7 @@ const CustomerTable = ({ initialPage = 0, initialPageSize = 10 }) => {
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, pageSize]);
+  }, [accessToken, page, pageSize]);
 
   const columns = [
     {
@@ -54,6 +50,16 @@ const CustomerTable = ({ initialPage = 0, initialPageSize = 10 }) => {
       title: "Tên khách hàng",
       dataIndex: "name",
       key: "name",
+      render: (text, record) => (
+        <a
+          onClick={() => {
+            setSelectedCustomerId(record.id.id);
+            setServerConfigModalOpen(true);
+          }}
+        >
+          {text}
+        </a>
+      ),
     },
     {
       title: "Email",
@@ -71,7 +77,7 @@ const CustomerTable = ({ initialPage = 0, initialPageSize = 10 }) => {
             value={pageSize}
             onChange={(val) => {
               setPageSize(val);
-              setPage(0); // reset page khi thay đổi pageSize
+              setPage(0);
             }}
             style={{ width: 120 }}
             options={[
@@ -82,18 +88,42 @@ const CustomerTable = ({ initialPage = 0, initialPageSize = 10 }) => {
           />
         </Col>
         <Col>
-          <Pagination
-            current={page + 1}
-            pageSize={pageSize}
-            total={total}
-            onChange={(p, size) => {
-              setPage(p - 1);
-              setPageSize(size);
-            }}
-            showSizeChanger={false}
-          />
+          <Space>
+            <Pagination
+              current={page + 1}
+              pageSize={pageSize}
+              total={total}
+              onChange={(p, size) => {
+                setPage(p - 1);
+                setPageSize(size);
+              }}
+              showSizeChanger={false}
+            />
+            <Tooltip title="Thêm khách hàng">
+              <Button
+                type="primary"
+                size="middle"
+                icon={<PlusOutlined />}
+                onClick={() => setIsAddModalOpen(true)}
+              />
+            </Tooltip>
+          </Space>
         </Col>
       </Row>
+
+      <CustomerAddModal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdded={() => fetchCustomers()}
+      />
+
+      <CustomerServerConfig
+        open={serverConfigModalOpen}
+        onClose={() => setServerConfigModalOpen(false)}
+        customerId={selectedCustomerId}
+        accessToken={accessToken}
+      />
+
       <Table
         columns={columns}
         dataSource={customers.map((c) => ({ ...c, key: c.id.id }))}

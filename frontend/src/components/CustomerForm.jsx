@@ -23,6 +23,7 @@ const { Text } = Typography;
 const { Option } = Select;
 
 const CustomerForm = ({ initialPage = 0, initialPageSize = 10 }) => {
+  const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const username = localStorage.getItem("username");
@@ -37,7 +38,6 @@ const CustomerForm = ({ initialPage = 0, initialPageSize = 10 }) => {
   const [messageApi, contextHolder] = message.useMessage();
 
   const onFinish = async (values) => {
-    console.log("✅ Sending login:", values);
     setLoading(true);
     try {
       const res = await axios.post(
@@ -48,16 +48,15 @@ const CustomerForm = ({ initialPage = 0, initialPageSize = 10 }) => {
         }
       );
 
-      console.log("✅ Login success:", res.data);
       localStorage.setItem("accessToken", res.data.token);
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("username", values.username);
 
       setUser({ username: values.username });
+      setAccessToken(res.data.token); // <-- cập nhật token
       messageApi.success("Đăng nhập thành công!");
       setOpen(false);
     } catch (err) {
-      console.error("❌ Login failed:", err);
       messageApi.error("Sai tài khoản hoặc lỗi kết nối!");
     } finally {
       setLoading(false);
@@ -130,7 +129,7 @@ const CustomerForm = ({ initialPage = 0, initialPageSize = 10 }) => {
         </div>
       </Form.Item>
       <Form.Item style={{ padding: 16 }}>
-        <CustomerTable />
+        <CustomerTable accessToken={accessToken}/>
       </Form.Item>
 
       <Drawer

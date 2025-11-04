@@ -470,6 +470,7 @@ export default function WifiConfigForm() {
               </Button> */}
             </Flex>
           </Flex>
+          <Divider size="small"/>
           {/* Trong hình */}
           <Flex vertical gap={8}>
             <Text>Trong hình</Text>
