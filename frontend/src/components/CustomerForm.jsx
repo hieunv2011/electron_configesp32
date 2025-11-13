@@ -143,10 +143,10 @@ const CustomerForm = ({ initialPage = 0, initialPageSize = 10 }) => {
           name="login"
           labelCol={{ span: 6 }}
           wrapperCol={{ span: 18 }}
-          initialValues={{
-            username: "tenant@thingsboard.org",
-            password: "]93V!W8roecJ",
-          }}
+          // initialValues={{
+          //   username: "tenant@thingsboard.org",
+          //   password: "]93V!W8roecJ",
+          // }}
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off"

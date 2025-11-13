@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   listPorts,
   sendCommand,
@@ -18,12 +18,13 @@ import {
   sendDeviceSerial,
   sendReadInfo,
   sendDebugCpu,
+  sendCar,
+  sendPrinterBaud,
 } from "../utils/api";
 import { message } from "antd";
 import {
   Input,
   Button,
-  Space,
   Form,
   Divider,
   Typography,
@@ -31,7 +32,6 @@ import {
   Flex,
   AutoComplete,
 } from "antd";
-
 import {
   SendOutlined,
   WifiOutlined,
@@ -44,7 +44,10 @@ import {
   UndoOutlined,
   InfoCircleOutlined,
   CarOutlined,
+  PrinterOutlined,
+  RedoOutlined,
 } from "@ant-design/icons";
+
 import { Tooltip } from "antd";
 import Esp32Log from "./Esp32Log";
 import commandList from "../const/commandList";
@@ -74,6 +77,8 @@ export default function WifiConfigForm() {
   const [portWsTh, setPortWsTh] = useState("");
 
   const [cpu, setCpu] = useState("0");
+  const [printerBaud, setPrinterBaud] = useState("9600");
+
   const [debug, setDebug] = useState("0");
 
   const [userCommand, setUserCommand] = useState("");
@@ -268,6 +273,16 @@ export default function WifiConfigForm() {
     }
   };
 
+  const handleSendPrinterBaud = async () => {
+    try {
+      await sendPrinterBaud(serial, printerBaud);
+      messageApi.success("Đã gửi lệnh Printer Baud thành công");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gửi lệnh Printer Baud thất bại");
+    }
+  };
+
   const handleSendCpuDebug = async () => {
     try {
       await sendDebugCpu(serial, cpu, debug);
@@ -368,6 +383,65 @@ export default function WifiConfigForm() {
       <Form.Item>
         <Flex vertical gap={8}>
           <Flex gap={16}>
+            <Flex gap={8}>
+              <Button
+                type="primary"
+                style={{
+                  backgroundColor: "#faad14",
+                  borderColor: "#faad14",
+                }}
+                onClick={handleReboot}
+                icon={<RedoOutlined />}
+              >
+                Reboot
+              </Button>
+              <Button type="primary" danger onClick={handleReset}>
+                Reset
+              </Button>
+              <Tooltip title="OTA Update">
+                <Button
+                  type="primary"
+                  icon={<DownloadOutlined />}
+                  disabled
+                  onClick={handleSendOta}
+                />
+              </Tooltip>
+              <Tooltip title="Chụp ảnh">
+                <Button
+                  type="primary"
+                  icon={<CameraOutlined />}
+                  onClick={handleCapture}
+                />
+              </Tooltip>
+              <Button type="primary" onClick={handleSendFram}>
+                FRAM
+              </Button>
+              <Button
+                type="primary"
+                style={{
+                  backgroundColor: "#13c2c2",
+                  borderColor: "#13c2c2",
+                }}
+                icon={<InfoCircleOutlined />}
+                onClick={handleReadInfo}
+              >
+                INFO
+              </Button>
+            </Flex>
+            <Input
+              placeholder="Baudrate Máy in"
+              value={printerBaud}
+              onChange={(e) => setPrinterBaud(e.target.value)}
+              prefix={<PrinterOutlined />}
+            />
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              size="middle"
+              onClick={handleSendCar}
+            >
+              Gửi Baudrate máy in
+            </Button>
             <Input
               placeholder="Số xe"
               value={carNumber}
@@ -406,7 +480,7 @@ export default function WifiConfigForm() {
             >
               Gửi CPU/Debug
             </Button>
-            <Input
+            {/* <Input
               placeholder="Device Serial"
               value={deviceSerial}
               onChange={(e) => setDeviceSerial(e.target.value)}
@@ -418,59 +492,14 @@ export default function WifiConfigForm() {
               onClick={handleSendDeviceSerial}
             >
               Gửi Serial
-            </Button>
+            </Button> */}
             {/* <Input
               placeholder="USER COMMAND"
               value={userCommand}
               onChange={(e) => setUserCommand(e.target.value)}
             /> */}
-            <Flex gap={8}>
-              <Tooltip title="OTA Update">
-                <Button
-                  type="primary"
-                  icon={<DownloadOutlined />}
-                  disabled
-                  onClick={handleSendOta}
-                />
-              </Tooltip>
-              <Tooltip title="Chụp ảnh">
-                <Button
-                  type="primary"
-                  icon={<CameraOutlined />}
-                  onClick={handleCapture}
-                />
-              </Tooltip>
-              <Button type="primary" onClick={handleSendFram}>
-                FRAM
-              </Button>
-              <Button
-                type="primary"
-                style={{
-                  backgroundColor: "#13c2c2",
-                  borderColor: "#13c2c2",
-                }}
-                icon={<InfoCircleOutlined />}
-                onClick={handleReadInfo}
-              >
-                INFO
-              </Button>
-              {/* <Button
-                type="primary"
-                style={{
-                  backgroundColor: "#faad14",
-                  borderColor: "#faad14",
-                }}
-                onClick={handleReboot}
-                icon={<RedoOutlined />}
-              >
-                Reboot ESP32
-              </Button>
-              <Button type="primary" danger onClick={handleReset}>
-                Reset ESP32
-              </Button> */}
-            </Flex>
           </Flex>
-          <Divider size="small"/>
+          <Divider size="small" />
           {/* Trong hình */}
           <Flex vertical gap={8}>
             <Text>Trong hình</Text>

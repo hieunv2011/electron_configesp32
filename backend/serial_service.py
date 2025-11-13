@@ -109,5 +109,11 @@ def read_serial_realtime():
         time.sleep(0.05)
 
 # ------------------- Main -------------------
+# if __name__ == "__main__":
+#    app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    import os
+    os.environ.pop("WERKZEUG_RUN_MAIN", None)
+    os.environ.pop("WERKZEUG_SERVER_FD", None)
+    app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
+

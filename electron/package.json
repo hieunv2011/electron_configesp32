@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
+    "prebuild:exe": "node build-version.js",
     "build:exe": "electron-builder"
   },
   "devDependencies": {
@@ -29,6 +30,10 @@
       {
         "from": "../backend/dist/serial_service.exe",
         "to": "backend/dist/serial_service.exe"
+      },
+      {
+        "from": "version.json",
+        "to": "version.json"
       }
     ],
     "win": {

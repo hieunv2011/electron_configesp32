@@ -137,17 +137,27 @@ export const sendReadInfo = async (serial) => {
 
 //sendCar
 export const sendCar = async (serial, car) => {
-  if (!carMode) throw new Error("Thiếu car");
+  if (!serial) throw new Error("Thiếu car");
   const raw = `@,CONFIG,${serial || ""},car,${car}$`;
+  const res = await sendCommand(raw);
+  console.log("sendCar res:", raw);
+  return res;
+};
+
+//sendPrinterBaud
+export const sendPrinterBaud = async (serial, baud) => {
+  if (!baud) throw new Error("Thiếu baud");
+  const raw = `@,CONFIG,${serial || ""},printer_baud,${baud}$`;
   const res = await sendCommand(raw);
   return res;
 };
 
+
 //send debug & cpu
 export const sendDebugCpu = async (serial, cpu, debug) => {
   if (!cpu || !debug) throw new Error("Thiếu debug hoặc cpu");
-  const raw1 = `@,CONFIG,${debug || ""},ws_server,${debug}$`;
-  const raw2 = `@,CONFIG,${cpu || ""},ws_port,${cpu}$`;
+  const raw1 = `@,CONFIG,${debug || ""},debug,${debug}$`;
+  const raw2 = `@,CONFIG,${cpu || ""},cpu,${cpu}$`;
   const res1 = await sendCommand(raw1);
   await new Promise((resolve) => setTimeout(resolve, 1000));
   const res2 = await sendCommand(raw2);

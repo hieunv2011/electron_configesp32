@@ -1,12 +1,14 @@
 import {
-  BrowserRouter as Router,
+  HashRouter as Router,
   Routes,
   Route,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import WifiConfigForm from "./components/WifiConfigForm";
 import CustomerForm from "./components/CustomerForm";
 import DeviceList from "./components/DeviceList";
+import Test from "./components/Test";
 import { Layout, Menu, Button } from "antd";
 import {
   MenuFoldOutlined,
@@ -15,30 +17,22 @@ import {
   DesktopOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const { Header, Sider, Content } = Layout;
 
 function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedLabel, setSelectedLabel] = useState("Cấu hình ICM");
 
   const menuItems = [
     { key: "1", icon: <DesktopOutlined />, label: "Cấu hình ICM", path: "/" },
-    {
-      key: "2",
-      icon: <TeamOutlined />,
-      label: "Cấu hình khách hàng",
-      path: "/customers",
-    },
-    {
-      key: "3",
-      icon: <UploadOutlined />,
-      label: "Danh sách thiết bị",
-      path: "/devices",
-    },
+    { key: "2", icon: <TeamOutlined />, label: "Cấu hình khách hàng", path: "/customers" },
+    { key: "3", icon: <UploadOutlined />, label: "Danh sách thiết bị", path: "/devices" },
   ];
+
   useEffect(() => {
     const current = menuItems.find((m) => m.path === location.pathname);
     setSelectedLabel(current ? current.label : "");
@@ -56,7 +50,7 @@ function AppLayout() {
         <Menu
           mode="inline"
           theme="dark"
-          defaultSelectedKeys={["1"]}
+          selectedKeys={[menuItems.find((m) => m.path === location.pathname)?.key]}
           onClick={(e) => navigate(menuItems.find((m) => m.key === e.key).path)}
           items={menuItems}
         />
@@ -81,11 +75,13 @@ function AppLayout() {
             {selectedLabel}
           </div>
         </Header>
+
         <Content style={{ padding: "16px", backgroundColor: "#fff" }}>
           <Routes>
             <Route path="/" element={<WifiConfigForm />} />
             <Route path="/customers" element={<CustomerForm />} />
             <Route path="/devices" element={<DeviceList />} />
+            <Route path="/test" element ={<Test/>}/>
           </Routes>
         </Content>
       </Layout>
